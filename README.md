@@ -17,4 +17,4 @@ Coming soon...
 
 ## Contributions
 
-Members of EmR are requested to refer to the `M_CONTRIBUTING.md` file before raising PRs or issues. Individuals outside of EmR must refer to the `CONTRIBUTING.md` file before raising PRs or issues.
+Members of EmR are requested to refer to the [M_CONTRIBUTING.md](./M_CONTRIBUTING.md) file before raising PRs or issues. Individuals outside of EmR must refer to the [CONTRIBUTING.md](./CONTRIBUTING.md) file before raising PRs or issues.
