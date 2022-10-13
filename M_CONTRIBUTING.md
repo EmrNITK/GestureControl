@@ -24,7 +24,11 @@ All members may raise issues. When raising an issue, mention
 
 The maintainers will then assign the issue to the mentioned person.
 
-## Pull Requests
+## Pull requests
 
 All members may create PRs. When creating a PR, discuss your apporach briefly and mention the corresponding issue (if any). 
 Other members will then review the PR, after which it may accpeted or you may be asked to make changes.
+
+## Coding style
+
+When raising a PR, please write well documented code (using python docstrings and descriptive names). Modular, succinct and non-redundant code will be promoted.
