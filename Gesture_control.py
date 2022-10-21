@@ -35,14 +35,22 @@ def create_mask(img):
     #cv2.imshow('Mask', mask)
     return mask
 
+def thresholding(mask):
+    _,thresh = cv2.threshold(mask,127,255,cv2.THRESH_BINARY) # if pixel intensity <= 127 then set it as 0 and pixel intensity > 127 set it as 255
+    return thresh
 
 vid = cv2.VideoCapture(0);
 create_trackbars()
 while(1):
     _,frame = vid.read()
+    frame = frame[:300, 300:] # only considering frame from row 0-300 and col from 300-end so that main focus is on our hands
+    frame = cv2.GaussianBlur(frame,(5,5),0) # to remove noise from frame
+
     mask = create_mask(frame)
+    threshImg = thresholding(mask)
+
     cv2.imshow('video',frame)
-    
+    cv2.imshow("mask",mask)
     key = cv2.waitKey(1)
     
     if key == ord('q'):
