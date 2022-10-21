@@ -40,19 +40,22 @@ def threshold(mask):
     return thresh
 
 def find_contours(thresh):
-    contours,heirarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE) #give list of all essential boundary points
+    contours,heirarchy = cv2.findContours(thresh,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE) #give list of all essential boundary points
     return contours
-
-def centroid(contours):
-    if len(contours) == 0:
-        return(-1,-1)
+    
+def maxContours(contours):
     max_contour = max(contours,key = cv2.contourArea)
     epsilon = 0.01*cv2.arcLength(max_contour,True)  # maximum distance from contour to approximated contour. It is an accuracy parameter
     max_contour = cv2.approxPolyDP(max_contour,epsilon,True)
+    return max_contour
 
+def centroid(contours):
+    if len(contours) == 0:
+        return (-1,-1)
+    max_contour = maxContours(contours)
     M=cv2.moments(max_contour) # gives a dictionary of all moment values calculated
     try:
-        x = int(M['m10']/M['m00'])  #Centroid is given by the relations, 𝐶𝑥 =𝑀10/𝑀00 and 𝐶𝑦 =𝑀01/𝑀00
+        x = int(M['m10']/M['m00'])  # Centroid is given by the relations, 𝐶𝑥 =𝑀10/𝑀00 and 𝐶𝑦 =𝑀01/𝑀00
         y = int(M['m01']/M['m00'])
     except ZeroDivisonError :
         return (-1,-1) 
@@ -62,6 +65,7 @@ vid = cv2.VideoCapture(0);
 create_trackbars()
 while(1):
     _,frame = vid.read()
+    frame = cv2.flip(frame,1) # resolving mirror image issues
     frame = frame[:300, 300:] # only considering frame from row 0-300 and col from 300-end so that main focus is on our hands
     frame = cv2.GaussianBlur(frame,(5,5),0) # to remove noise from frame
 
