@@ -69,9 +69,9 @@ while(1):
     threshImg = threshold(mask)
     contours = find_contours(threshImg)
     frame = cv2.drawContours(frame,contours,-1,(255,0,0),2) # drawing all contours 
-    (x,y) = centroid(contours)
-    if(x,y) != (-1,-1)
-    frame = cv2.circle(frame , (x,y) , 10 , (255,0,0) , 2)
+    (centroid_x,centroid_y) = centroid(contours)
+    if(x,y) != (-1,-1):
+        frame = cv2.circle(frame , (x,y) , 10 , (255,0,0) , 2)
     
     cv2.imshow('video',frame)
     cv2.imshow("mask",mask)
