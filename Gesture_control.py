@@ -35,11 +35,11 @@ def create_mask(img):
     #cv2.imshow('Mask', mask)
     return mask
 
-def thresholding(mask):
+def threshold(mask):
     _,thresh = cv2.threshold(mask,127,255,cv2.THRESH_BINARY) # if pixel intensity <= 127 then set it as 0 and pixel intensity > 127 set it as 255
     return thresh
 
-def find_Contours(thresh):
+def find_contours(thresh):
     contours,heirarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE) #give list of all essential boundary points
     return contours
 
@@ -51,8 +51,8 @@ while(1):
     frame = cv2.GaussianBlur(frame,(5,5),0) # to remove noise from frame
 
     mask = create_mask(frame)
-    threshImg = thresholding(mask)
-    contours = find_Contours(threshImg)
+    threshImg = threshold(mask)
+    contours = find_contours(threshImg)
     frame = cv2.drawContours(frame,contours,-1,(255,0,0),2) # drawing all contours 
     
     cv2.imshow('video',frame)
