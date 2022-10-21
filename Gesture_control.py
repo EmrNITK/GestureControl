@@ -40,13 +40,34 @@ def threshold(mask):
     return thresh
 
 def find_contours(thresh):
-    contours,heirarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE) #give list of all essential boundary points
+    contours,heirarchy = cv2.findContours(thresh,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE) #give list of all essential boundary points
     return contours
+    
+def max_contour(contours):
+    if len(contours) == 0:
+        return []
+    max_cntr = max(contours,key = cv2.contourArea)
+    epsilon = 0.01*cv2.arcLength(max_cntr,True)  # maximum distance from contour to approximated contour. It is an accuracy parameter
+    max_cntr = cv2.approxPolyDP(max_cntr,epsilon,True)
+    return max_cntr
+
+def centroid(contour):
+
+    if len(contour) == 0: # if the array is empty return (-1,-1) 
+        return (-1,-1)
+    M=cv2.moments(contour) # gives a dictionary of all moment values calculated
+    try:
+        x = int(M['m10']/M['m00'])  # Centroid is given by the relations, 𝐶𝑥 =𝑀10/𝑀00 and 𝐶𝑦 =𝑀01/𝑀00
+        y = int(M['m01']/M['m00'])
+    except ZeroDivisionError:
+        return (-1,-1) 
+    return (x,y)
 
 vid = cv2.VideoCapture(0);
 create_trackbars()
 while(1):
     _,frame = vid.read()
+    frame = cv2.flip(frame,1) # resolving mirror image issues
     frame = frame[:300, 300:] # only considering frame from row 0-300 and col from 300-end so that main focus is on our hands
     frame = cv2.GaussianBlur(frame,(5,5),0) # to remove noise from frame
 
@@ -54,6 +75,10 @@ while(1):
     threshImg = threshold(mask)
     contours = find_contours(threshImg)
     frame = cv2.drawContours(frame,contours,-1,(255,0,0),2) # drawing all contours 
+    max_cntr = max_contour(contours)  #finding maximum contour of the thresholded area
+    (centroid_x,centroid_y) = centroid(max_cntr) #finding centroid of the maximum contour
+    if(centroid_x,centroid_y) != (-1,-1):
+        frame = cv2.circle(frame , (centroid_x,centroid_y) , 5 , (255,0,0) , -1) # drawing a circle on the identified centre of mass
     
     cv2.imshow('video',frame)
     cv2.imshow("mask",mask)
