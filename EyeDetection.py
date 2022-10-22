@@ -34,7 +34,7 @@ def detectEyes(img,show=False):
     # convert BGR image to RGB image
     imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     # process image
-    results = faceMesh.process(img)
+    results = faceMesh.process(imgRGB)
     
     eyesLandmarks = []
     
