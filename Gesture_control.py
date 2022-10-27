@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 import time
 import pyautogui
-import EyeDetection 
+import EyeDetection
 
 # Constants
 MOTION_UP = "Up"
@@ -17,18 +17,31 @@ MOTION_LEFT = "Left"
 MOTION_RIGHT = "Right"
 NO_MOTION = "_"
 
+IS_VIDEO_PLAYING = True
+
+KEY_FORWARD = 'right'
+KEY_BACKWARD = 'left'
+KEY_VOLUME_UP = 'up'
+KEY_VOLUME_DOWN = 'down'
+KEY_PLAY_PAUSE = 'space'
+
+CONTOUR_AREA_THRESHOLD = 500
+
+
 def empty(a):
     pass
 
+
 def create_trackbars():
     cv2.namedWindow('Trackbars')
-    cv2.resizeWindow('Trackbars', 640, 240)
+    cv2.resizeWindow('Trackbars', 640, 300)
     cv2.createTrackbar('HueMin', 'Trackbars', 0, 179, empty)
     cv2.createTrackbar('HueMax', 'Trackbars', 179, 179, empty)
     cv2.createTrackbar('SatMin', 'Trackbars', 0, 255, empty)
     cv2.createTrackbar('SatMax', 'Trackbars', 255, 255, empty)
     cv2.createTrackbar('ValMin', 'Trackbars', 0, 255, empty)
     cv2.createTrackbar('ValMax', 'Trackbars', 255, 255, empty)
+
 
 def create_mask(img):
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -43,110 +56,165 @@ def create_mask(img):
     mask = cv2.inRange(imgHSV, lower, upper)
     return mask
 
+
 def threshold(mask):
-    _,thresh = cv2.threshold(mask,127,255,cv2.THRESH_BINARY) # if pixel intensity <= 127 then set it as 0 and pixel intensity > 127 set it as 255
+    _, thresh = cv2.threshold(
+        mask, 127, 255, cv2.THRESH_BINARY
+    )  # if pixel intensity <= 127 then set it as 0 and pixel intensity > 127 set it as 255
     return thresh
 
+
 def find_contours(thresh):
-    contours,heirarchy = cv2.findContours(thresh,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE) #give list of all essential boundary points
+    contours, heirarchy = cv2.findContours(
+        thresh, cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE)  #give list of all essential boundary points
     return contours
-    
+
+
 def max_contour(contours):
     if len(contours) == 0:
         return []
-    max_cntr = max(contours,key=lambda x: cv2.contourArea(x))
-    epsilon = 0.005*cv2.arcLength(max_cntr,True)  # maximum distance from contour to approximated contour. It is an accuracy parameter
-    max_cntr = cv2.approxPolyDP(max_cntr,epsilon,True)
+    max_cntr = max(contours, key=lambda x: cv2.contourArea(x))
+    epsilon = 0.005 * cv2.arcLength(
+        max_cntr, True
+    )  # maximum distance from contour to approximated contour. It is an accuracy parameter
+    max_cntr = cv2.approxPolyDP(max_cntr, epsilon, True)
     return max_cntr
 
+
 def centroid(contour):
-    if len(contour) == 0: # if the array is empty return (-1,-1) 
-        return (-1,-1)
-    M=cv2.moments(contour) # gives a dictionary of all moment values calculated
+    if len(contour) == 0:  # if the array is empty return (-1,-1)
+        return (-1, -1)
+    M = cv2.moments(
+        contour)  # gives a dictionary of all moment values calculated
     try:
-        x = int(M['m10']/M['m00'])  # Centroid is given by the relations, 𝐶𝑥 =𝑀10/𝑀00 and 𝐶𝑦 =𝑀01/𝑀00
-        y = int(M['m01']/M['m00'])
+        x = int(
+            M['m10'] / M['m00']
+        )  # Centroid is given by the relations, 𝐶𝑥 =𝑀10/𝑀00 and 𝐶𝑦 =𝑀01/𝑀00
+        y = int(M['m01'] / M['m00'])
     except ZeroDivisionError:
-        return (-1,-1) 
-    return (x,y)
+        return (-1, -1)
+    return (x, y)
+
 
 def clean_image(mask):
-    img_eroded = cv2.erode(threshImg,(3,3), iterations=1)  
-    img_dilated = cv2.dilate(img_eroded,(3,3),iterations = 1)
+    img_eroded = cv2.erode(threshImg, (3, 3), iterations=1)
+    img_dilated = cv2.dilate(img_eroded, (3, 3), iterations=1)
     return img_dilated
+
 
 def detect_hand(mask):
     return np.average(mask) > 50
-    
-def velocity(x1,x2,t):
-    return (x2 - x1)/t
 
-def detect_motion(x1,y1,x2,y2,t):
-    vel_x = velocity(x1,x2,t)
-    vel_y = velocity(y1,y2,t)
 
-    if vel_x > 500:
+def velocity(x1, x2, t):
+    return (x2 - x1) / t
+
+
+def detect_motion(x1, y1, x2, y2, t):
+    vel_x = velocity(x1, x2, t)
+    vel_y = velocity(y1, y2, t)
+
+    if vel_x > 300:
         return MOTION_RIGHT
-    elif vel_x < -500:
+    elif vel_x < -300:
         return MOTION_LEFT
-    elif vel_y > 200:
+    elif vel_y > 300:
         return MOTION_DOWN
-    elif vel_y < -200:
+    elif vel_y < -300:
         return MOTION_UP
     else:
         return NO_MOTION
 
+
 # performing actions based on hand motion
-def performAction(hand_motion):
+def perform_action(hand_motion):
     if hand_motion == MOTION_RIGHT:
-        pyautogui.press('right')
+        pyautogui.press(KEY_FORWARD)
     elif hand_motion == MOTION_LEFT:
-        pyautogui.press('left')
+        pyautogui.press(KEY_BACKWARD)
     elif hand_motion == MOTION_UP:
-        pyautogui.press('up')
+        pyautogui.press(KEY_VOLUME_UP)
     elif hand_motion == MOTION_DOWN:
-        pyautogui.press('down')
+        pyautogui.press(KEY_VOLUME_DOWN)
+
+
+def play_video():
+    global IS_VIDEO_PLAYING
+    IS_VIDEO_PLAYING = True
+    pyautogui.press(KEY_PLAY_PAUSE)
+
+
+def pause_video():
+    global IS_VIDEO_PLAYING
+    IS_VIDEO_PLAYING = False
+    pyautogui.press(KEY_PLAY_PAUSE)
 
 
 #################################################################################
 ########## Driver Code ##########################################################
 #################################################################################
 
-vid = cv2.VideoCapture(0);
+vid = cv2.VideoCapture(0)
 create_trackbars()
-frame_num = 4 # Counter for frame number
-prev_x, prev_y, cur_x, cur_y = -1,-1,-1,-1 # Initializing the previous and current co-ordinates of the hand centroid
-last_timestamp = 0 # Initializing the last recording timestamp
+frame_num = 4  # Counter for frame number
+prev_x, prev_y, cur_x, cur_y = -1, -1, -1, -1  # Initializing the previous and current co-ordinates of the hand centroid
+last_timestamp = 0  # Initializing the last recording timestamp
 
-while(1):
-    _,frame = vid.read()
-    frame = cv2.flip(frame,1) # resolving mirror image issues
+while (1):
+    _, frame = vid.read()
+    frame = cv2.flip(frame, 1)  # resolving mirror image issues
+
     # For eye detection
-    fullScreenFrame=frame
-    frame = frame[:300, 300:] # only considering frame from row 0-300 and col from 300-end so that main focus is on our hands
-    frame = cv2.GaussianBlur(frame,(5,5),0) # to remove noise from frame
+    fullScreenFrame = frame
+    # Detecting eyes for playing/pausing video
+    eyes = EyeDetection.detectEyes(fullScreenFrame) > 0
+    if eyes and not IS_VIDEO_PLAYING:
+        play_video()
+    elif not eyes and IS_VIDEO_PLAYING:
+        pause_video()
+
+    # Cropping the frame so that only right-half frame will detect hand motion
+    height, width = frame.shape[:2]
+    # Let's get the starting pixel coordiantes (top left of frame)
+    start_row, start_col = int(0), int(width * .5)
+    # Let's get the ending pixel coordinates (bottom right of frame)
+    end_row, end_col = int(height), int(width)
+
+    frame = frame[
+        start_row:end_row, start_col:
+        end_col]  # only considering frame row from start_row to end_row and col from start_col to end_col, so that main focus is on our hands
+
+    frame = cv2.GaussianBlur(frame, (5, 5), 0)  # to remove noise from frame
 
     mask = create_mask(frame)
     threshImg = threshold(mask)
     cleaned_mask = clean_image(threshImg)
     contours = find_contours(cleaned_mask)
-    frame = cv2.drawContours(frame,contours,-1,(255,0,0),2) # drawing all contours 
-    max_cntr = max_contour(contours)  # finding maximum contour of the thresholded area
-    (centroid_x,centroid_y) = centroid(max_cntr) # finding centroid of the maximum contour
-    if(centroid_x,centroid_y) != (-1,-1):
-        frame = cv2.circle(frame , (centroid_x,centroid_y) , 5 , (255,255,0) , -1) # drawing a circle on the identified centroid
-        hand_detected = cv2.contourArea(max_cntr) >= 3000 # Max contour area must be greater than thois threshold 
+    frame = cv2.drawContours(frame, contours, -1, (255, 0, 0),
+                             2)  # drawing all contours
+    max_cntr = max_contour(
+        contours)  # finding maximum contour of the thresholded area
+    (centroid_x, centroid_y) = centroid(
+        max_cntr)  # finding centroid of the maximum contour
+    if (centroid_x, centroid_y) != (-1, -1):
+        frame = cv2.circle(frame, (centroid_x, centroid_y), 5, (255, 255, 0),
+                           -1)  # drawing a circle on the identified centroid
+        hand_detected = cv2.contourArea(
+            max_cntr
+        ) >= CONTOUR_AREA_THRESHOLD  # Max contour area must be greater than tois threshold
         if hand_detected:
             if prev_x == -1:
                 prev_x, prev_y = centroid_x, centroid_y
                 frame_num = 10
-            
+
             if frame_num == 0:
                 cur_time = time.time()
                 time_elapsed = cur_time - last_timestamp
-                hand_motion = detect_motion(prev_x, prev_y, centroid_x, centroid_y, time_elapsed)
+                hand_motion = detect_motion(prev_x, prev_y, centroid_x,
+                                            centroid_y, time_elapsed)
                 print(hand_motion)
-                performAction(hand_motion)
+                perform_action(hand_motion)
                 prev_x, prev_y = centroid_x, centroid_y
                 last_timestamp = time.time()
 
@@ -160,14 +228,14 @@ while(1):
         else:
             prev_x, prev_y = -1, -1
             frame_num = 4
-    
-    cv2.imshow('video',frame)
-    cv2.imshow("mask",mask)
+
+    cv2.imshow('video', frame)
+    cv2.imshow("mask", mask)
     key = cv2.waitKey(10)
-    
+
     if key == ord('q'):
         break
-    
+
 vid.release()
 
 cv2.destroyAllWindows()
