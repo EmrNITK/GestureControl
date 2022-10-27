@@ -16,7 +16,16 @@ MOTION_DOWN = "Down"
 MOTION_LEFT = "Left"
 MOTION_RIGHT = "Right"
 NO_MOTION = "_"
+
 IS_VIDEO_PLAYING = True
+
+KEY_FORWARD = 'right'
+KEY_BACKWARD = 'left'
+KEY_VOLUME_UP = 'up'
+KEY_VOLUME_DOWN = 'down'
+KEY_PLAY_PAUSE = 'space'
+
+CONTOUR_AREA_THRESHOLD = 500
 
 
 def empty(a):
@@ -25,7 +34,7 @@ def empty(a):
 
 def create_trackbars():
     cv2.namedWindow('Trackbars')
-    cv2.resizeWindow('Trackbars', 640, 240)
+    cv2.resizeWindow('Trackbars', 640, 300)
     cv2.createTrackbar('HueMin', 'Trackbars', 0, 179, empty)
     cv2.createTrackbar('HueMax', 'Trackbars', 179, 179, empty)
     cv2.createTrackbar('SatMin', 'Trackbars', 0, 255, empty)
@@ -106,40 +115,40 @@ def detect_motion(x1, y1, x2, y2, t):
     vel_x = velocity(x1, x2, t)
     vel_y = velocity(y1, y2, t)
 
-    if vel_x > 500:
+    if vel_x > 300:
         return MOTION_RIGHT
-    elif vel_x < -500:
+    elif vel_x < -300:
         return MOTION_LEFT
-    elif vel_y > 200:
+    elif vel_y > 300:
         return MOTION_DOWN
-    elif vel_y < -200:
+    elif vel_y < -300:
         return MOTION_UP
     else:
         return NO_MOTION
 
 
 # performing actions based on hand motion
-def performAction(hand_motion):
+def perform_action(hand_motion):
     if hand_motion == MOTION_RIGHT:
-        pyautogui.press('right')
+        pyautogui.press(KEY_FORWARD)
     elif hand_motion == MOTION_LEFT:
-        pyautogui.press('left')
+        pyautogui.press(KEY_BACKWARD)
     elif hand_motion == MOTION_UP:
-        pyautogui.press('up')
+        pyautogui.press(KEY_VOLUME_UP)
     elif hand_motion == MOTION_DOWN:
-        pyautogui.press('down')
+        pyautogui.press(KEY_VOLUME_DOWN)
 
 
-def playVideo():
+def play_video():
     global IS_VIDEO_PLAYING
     IS_VIDEO_PLAYING = True
-    pyautogui.press('space')
+    pyautogui.press(KEY_PLAY_PAUSE)
 
 
-def pauseVideo():
+def pause_video():
     global IS_VIDEO_PLAYING
     IS_VIDEO_PLAYING = False
-    pyautogui.press('space')
+    pyautogui.press(KEY_PLAY_PAUSE)
 
 
 #################################################################################
@@ -155,18 +164,27 @@ last_timestamp = 0  # Initializing the last recording timestamp
 while (1):
     _, frame = vid.read()
     frame = cv2.flip(frame, 1)  # resolving mirror image issues
-   
+
     # For eye detection
     fullScreenFrame = frame
     # Detecting eyes for playing/pausing video
     eyes = EyeDetection.detectEyes(fullScreenFrame) > 0
     if eyes and not IS_VIDEO_PLAYING:
-        playVideo()
+        play_video()
     elif not eyes and IS_VIDEO_PLAYING:
-        pauseVideo()
+        pause_video()
 
-    frame = frame[:300,
-                  300:]  # only considering frame from row 0-300 and col from 300-end so that main focus is on our hands
+    # Cropping the frame so that only right-half frame will detect hand motion
+    height, width = frame.shape[:2]
+    # Let's get the starting pixel coordiantes (top left of frame)
+    start_row, start_col = int(0), int(width * .5)
+    # Let's get the ending pixel coordinates (bottom right of frame)
+    end_row, end_col = int(height), int(width)
+
+    frame = frame[
+        start_row:end_row, start_col:
+        end_col]  # only considering frame row from start_row to end_row and col from start_col to end_col, so that main focus is on our hands
+
     frame = cv2.GaussianBlur(frame, (5, 5), 0)  # to remove noise from frame
 
     mask = create_mask(frame)
@@ -184,7 +202,7 @@ while (1):
                            -1)  # drawing a circle on the identified centroid
         hand_detected = cv2.contourArea(
             max_cntr
-        ) >= 3000  # Max contour area must be greater than thois threshold
+        ) >= CONTOUR_AREA_THRESHOLD  # Max contour area must be greater than tois threshold
         if hand_detected:
             if prev_x == -1:
                 prev_x, prev_y = centroid_x, centroid_y
@@ -196,7 +214,7 @@ while (1):
                 hand_motion = detect_motion(prev_x, prev_y, centroid_x,
                                             centroid_y, time_elapsed)
                 print(hand_motion)
-                performAction(hand_motion)
+                perform_action(hand_motion)
                 prev_x, prev_y = centroid_x, centroid_y
                 last_timestamp = time.time()
 
