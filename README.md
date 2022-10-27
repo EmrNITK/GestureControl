@@ -11,6 +11,37 @@ This project is being made and maintained by the **Embedded Systems and Robotics
 - [x] Functions to allow tuning of the image processing algorithms.
 - [x] Use of auto keystroke and clicker modules to allow application to any media player.
 
+## Installation and Usage
+**Dependecies**
+
+ - [opencv-python](https://pypi.org/project/opencv-python/) 
+ - [mediapipe](https://pypi.org/project/mediapipe/)
+ - [PyAutoGUI](https://pypi.org/project/PyAutoGUI/)
+ - [Numpy](https://numpy.org/)
+
+**Command to run the python script**
+
+     python Gesture_control.py
+
+## Project Explanation
+The project working can be summarized into two parts:
+
+ - **Hand Motion Detection** 
+ 
+     Coming soon...
+ 
+ - **Eye Detection** 
+ 
+     Eye detection is done using [mediapipe](https://pypi.org/project/mediapipe/) for tracking the user's eyes. If the user is not looking at the screen, then the media player pauses and when          user looked back at the screen, it resumes.
+
+      ```python
+        eyes = EyeDetection.detectEyes(frame) > 0
+        if eyes and not IS_VIDEO_PLAYING:
+           play_video()
+        elif not eyes and IS_VIDEO_PLAYING:
+           pause_video()
+      ```
+
 ## Demonstrations
 
 Coming soon...
