@@ -197,7 +197,6 @@ while (1):
                                             centroid_y, time_elapsed)
                 print(hand_motion)
                 performAction(hand_motion)
-
                 prev_x, prev_y = centroid_x, centroid_y
                 last_timestamp = time.time()
 
