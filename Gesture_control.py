@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import time
 import pyautogui
+import EyeDetection 
 
 # Constants
 MOTION_UP = "Up"
@@ -95,6 +96,17 @@ def detect_motion(x1,y1,x2,y2,t):
     else:
         return NO_MOTION
 
+# performing actions based on hand motion
+def performAction(hand_motion):
+    if hand_motion == MOTION_RIGHT:
+        pyautogui.press('right')
+    elif hand_motion == MOTION_LEFT:
+        pyautogui.press('left')
+    elif hand_motion == MOTION_UP:
+        pyautogui.press('up')
+    elif hand_motion == MOTION_DOWN:
+        pyautogui.press('down')
+
 
 #################################################################################
 ########## Driver Code ##########################################################
@@ -109,6 +121,8 @@ last_timestamp = 0 # Initializing the last recording timestamp
 while(1):
     _,frame = vid.read()
     frame = cv2.flip(frame,1) # resolving mirror image issues
+    # For eye detection
+    fullScreenFrame=frame
     frame = frame[:300, 300:] # only considering frame from row 0-300 and col from 300-end so that main focus is on our hands
     frame = cv2.GaussianBlur(frame,(5,5),0) # to remove noise from frame
 
@@ -132,7 +146,7 @@ while(1):
                 time_elapsed = cur_time - last_timestamp
                 hand_motion = detect_motion(prev_x, prev_y, centroid_x, centroid_y, time_elapsed)
                 print(hand_motion)
-
+                performAction(hand_motion)
                 prev_x, prev_y = centroid_x, centroid_y
                 last_timestamp = time.time()
 
