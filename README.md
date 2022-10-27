@@ -7,7 +7,7 @@ This project is being made and maintained by the **Embedded Systems and Robotics
 ## Features
 
 - [x] Hand gesture recognition and processing to allow user to play/pause, seek, change volume.
-- [ ] Face tracking for automatic play/pause based on whether user is viewing media/is present.
+- [x] Face tracking for automatic play/pause based on whether user is viewing media/is present.
 - [x] Functions to allow tuning of the image processing algorithms.
 - [x] Use of auto keystroke and clicker modules to allow application to any media player.
 
