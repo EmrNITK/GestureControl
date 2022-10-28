@@ -1,4 +1,6 @@
-# Gesture Control
+<p align="center">
+  <img src="https://i.postimg.cc/gJKLSpRj/banner.png" />
+</p>
 
 Python module/script allowing a user to control any media player using hand gestures and face tracking.
 
@@ -99,13 +101,13 @@ The project working can be summarized into two parts:
  
      Eye detection is done using [mediapipe](https://pypi.org/project/mediapipe/) for tracking the user's eyes. If the user is not looking at the screen, then the media player pauses and when user looked back at the screen, it resumes.
 
-      ```python
+     ```python
         eyes = EyeDetection.detectEyes(frame) > 0
         if eyes and not IS_VIDEO_PLAYING:
            play_video()
         elif not eyes and IS_VIDEO_PLAYING:
            pause_video()
-      ```
+     ```
 
 ## Demonstrations
 
